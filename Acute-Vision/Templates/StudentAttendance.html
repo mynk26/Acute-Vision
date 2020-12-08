@@ -1,0 +1,12 @@
+{% block content %}
+<center>
+  <h2>Check Attendance</h2>
+    {% csrf_token %}
+    <table border='1px' style="text-align:center; width:40%">
+      <tr style='background-color:Gray'><th>Date</th><th>Subjec code</th><th>Status</th><tr>
+    {% for result in results %}
+      <tr><td>{{result.fields.Date}}</td><td>{{result.fields.Subject_Code}}</td><td>{{result.fields.Status}}</td></tr>
+    {% endfor %}
+    </table>
+    </center>
+{% endblock %}

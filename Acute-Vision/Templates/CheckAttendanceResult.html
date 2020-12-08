@@ -1,0 +1,16 @@
+{% block content %}
+<center>
+  <h2>Check Attendance</h2>
+    {% csrf_token %}
+    {%load mathfilters%}
+    <table border='1px' style="text-align:center; width:40%">
+    <tr style='background-color:Gray'><th>Subject Code</th><th>Enrollment</th><th>Presents</th><th>Absents</th><th>Percentage</th><tr>
+    {% for subject,EnrollmentList in results.items %}
+      <tr><td colspan='5'><span style='font-size:20px'>Subject_Code = {{subject}}</span></td></tr>
+      {% for enrollment,details in EnrollmentList.items %}
+          <tr><td>{{subject}}</td><td>{{enrollment}}</td><td>{{details.P}}</td><td>{{details.A}}</td><td>{% with total=details.P|add:details.A %}{{details.P|div:total|mul:100}}{%endwith%}%</td></tr>
+      {% endfor %}
+    {% endfor %}
+    </table>
+    </center>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% block content %}
+<center>
+  <h2>Modify Attendance</h2>
+  <a href='../../../Home'>Home</a>
+    <table border='1px' style="text-align:center; width:40%">
+      <tr style='background-color:Gray'><th>Date</th><th>Enrollment</th><th>Subjec code</th><th>Status</th><tr>
+    {% for result in results %}
+      <tr><td>{{result.fields.Date}}</td><td>{{result.fields.Enrollment}}</td><td>{{result.fields.Subject_Code}}</td><td>{{result.fields.Status}}</td><td><a href='../{{result.pk}}/'>Edit</a></td></tr>
+    {% endfor %}
+    </table>
+    </center>
+{% endblock %}
