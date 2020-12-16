@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import user_account,Student,Teacher
+from .models import user_account,Student,Teacher,FaceData
 
 
 
@@ -10,3 +10,4 @@ class CustomerAdmin(admin.ModelAdmin):
 
 admin.site.register(Student)
 admin.site.register(Teacher)
+admin.site.register(FaceData)

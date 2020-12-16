@@ -30,3 +30,7 @@ class Teacher(models.Model):
     Email = models.CharField(max_length = 50,null=True)
     Mobile = models.CharField(max_length=13)
     Id = models.OneToOneField(user_account, on_delete=models.CASCADE, primary_key=True)
+    
+class FaceData(models.Model):
+    Enrollment = models.OneToOneField(Student,on_delete=models.CASCADE,primary_key=True)
+    Face_Data = models.BinaryField()

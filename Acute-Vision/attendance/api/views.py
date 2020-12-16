@@ -5,6 +5,11 @@ from account.models import Student,user_account,Teacher
 from account.api.serializer import StudentProfileSerializer
 from attendance.models import Attendance
 from section.models import Class
+import cmake
+import cv2
+import face_recognition
+import shutil,os
+import pickle
 # Create your views here.
 
 class StudentAttendanceList(APIView):
@@ -101,11 +106,8 @@ class TakeAttendance(APIView):
             class_info = Class.objects.get(Class_Number=class_id)
             camera_id = class_info.Camera_Id
             Enrollment_List = self.Enrollment_List_Maker(section)
-            data = {'Desc.':"We'll call a function for marking attendance by face detection with the following parameter values",
-                    'Camera_id':camera_id,
-                    'Enrollment_List':Enrollment_List
-                    }
-            return Response(data)
+            data_list = self.MarkAttendance(Enrollment_List,camera_id)
+            return Response(data_list)
         except Exception as E:
             return Response(E.__str__(), status=500)
 
@@ -116,3 +118,60 @@ class TakeAttendance(APIView):
         for row in Student_Info.data:
             data.append(row['Enrollment'])
         return data
+
+    def MarkAttendance(self,Enrollment_List,Camera_Id):
+        result={}
+        cam = cv2.VideoCapture(0)                 # later we change it to camera id
+        frame = cam.read()[1]
+        cam.release()
+        cv2.imwrite('temp.jpg',frame)
+        img = face_recognition.load_image_file('temp.jpg')
+        os.remove('temp.jpg')
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        facedata_list = face_recognition.face_encodings(img) 
+        result['total_Face']=len(facedata_list)
+        for Enrollment in Enrollment_List:
+            facedata_old_str = self.fetch_face_data(Enrollment)
+            if facedata_old_str==0:
+                result[Enrollment]='Face Data Not Found'
+                continue
+            facedata_old = pickle.loads(facedata_old_str)
+            count=0
+            for facedata in facedata_list:
+                if face_recognition.compare_faces([facedata,],facedata_old)[0]:
+                    result[Enrollment]='P'
+                    count=1
+                    break
+            if count==0:
+                result[Enrollment] = 'A'
+        return result
+    
+    def fetch_face_data(self,Enrollment):
+        result = 0
+        try:
+            data = FaceData.objects.get(Enrollment=Enrollment)
+            result = data.Face_Data
+        except:
+            result = 0
+        return result
+        
+class LoadFace(APIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            files = os.scandir('./ImageData/to_add/')
+            lst=[]
+            for file in files:
+                lst.append(str(file.name))
+            for file in lst:
+                img = face_recognition.load_image_file('./ImageData/to_add/'+file)
+                img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+                facedata = face_recognition.face_encodings(img)[0]
+                ins = FaceData()
+                ins.Enrollment = Student.objects.get(Enrollment = file[:file.find('.')])
+                ins.Face_Data = pickle.dumps(facedata)
+                ins.save()
+                shutil.move('./ImageData/to_add/'+file,'./ImageData/all/')
+                
+            return Response(lst)
+        except Exception as e:
+            return Response(e.__str__())
