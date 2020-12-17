@@ -48,7 +48,7 @@ class AccountSerializer(serializers.ModelSerializer):
             'password':{'write_only':True}
         }
     def save(self):
-        Account=    user_account(username=self.validated_data['username'],is_student=self.validated_data['is_student'],is_teacher=self.validated_data['is_teacher'])
+        Account= user_account(username=self.validated_data['username'],is_student=self.validated_data['is_student'],is_teacher=self.validated_data['is_teacher'])
         password = self.validated_data['password']
         password2 = self.validated_data['password2']
         if password != password2:

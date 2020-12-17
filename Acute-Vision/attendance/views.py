@@ -1,11 +1,19 @@
 from django.http import HttpResponse
 from django.core import serializers
+from django.utils import timezone
 import json
 from django.shortcuts import render
-from account.models import user_account,Student
-from section.models import Section
+from account.models import user_account,Student,FaceData
+from section.models import Class,Section
+from attendance.api.serializer import AttendanceSerializer
+from time_table.models import Subject
 from .models import Attendance
 from django.conf import settings
+import cmake
+import cv2
+import face_recognition
+import shutil,os
+import pickle
 from .forms import TakeAttendanceForm,ModifyAttendanceForm,ModifyAttendanceSelectedForm,StudentAttendanceForm,CheckAttendanceForm
 User = settings.AUTH_USER_MODEL
 # Create your views here.
@@ -135,10 +143,89 @@ def TakeAttendance(request):
             if form.is_valid():
                 Sec = str(form.cleaned_data.get('Section').Section_Name)
                 Class_Number = str(form.cleaned_data.get('Class').Class_Number)
-                Camera_Id = str(form.cleaned_data.get('Class').Camera_Id)
                 Subject_Code = str(form.cleaned_data.get('Subject').Subject_Code)
-                return HttpResponse('Marking attendance of Students of Section <h4>'+Sec+'</h4> in Class <h4>'+Class_Number+' (Camera Id= '+Camera_Id+')</h4> for subject <h4>'+Subject_Code+'</h4>')
+                Subject_Code_ins = Subject.objects.get(Subject_Code=Subject_Code)
+                date = timezone.now().date()
+                Section_ins = Section.objects.get(Section_Name = Sec)
+                data,length= FaceFunctions().get(Sec,Subject_Code,Class_Number)
+                result = {}
+                result['Total Faces'] = length
+                result['A']=0
+                result['P']=0
+                for Enrollment,status in data.items():
+                    E=Student.objects.get(Enrollment=Enrollment)
+                    Status=''
+                    if status == 'A':
+                        result['A']+=1
+                        Status='A'
+                    elif status =='P':
+                        result['P']+=1
+                        Status='P'
+                    else:
+                        result['Data Not Found'] +=str(Enrollment)+' '
+                        Status = 'A'
+                    ins = Attendance.objects.create(Enrollment=E,Subject_Code=Subject_Code_ins,Section=Section_ins,Date=date,Status=Status)
+                    try:
+                        ins.save()
+                    except Exception as e:
+                        result[e.__str__()+' at:']=str(Enrollment)
+                return HttpResponse(result.items())
 
         form = TakeAttendanceForm()
         return render(request,'TakeAttendance.html',{'form':form})
     return HttpResponse("<script>window.location.href = '../../Home';alert('Not Verified');</script>")
+
+
+class FaceFunctions():
+    def get(self,section,subject_code,class_id):
+        try:
+            class_info = Class.objects.get(Class_Number=class_id)
+            camera_id = class_info.Camera_Id
+            Enrollment_List = self.Enrollment_List_Maker(section)
+            data_list = self.MarkAttendance(Enrollment_List,camera_id)
+            return data_list
+        except Exception as E:
+            return E.__str__()
+
+    def Enrollment_List_Maker(self,section):
+        Student_List = Student.objects.filter(Section=section)
+        data = []
+        for row in Student_List:
+            data.append(row.Enrollment)
+        return data
+
+    def MarkAttendance(self,Enrollment_List,Camera_Id):
+        result={}
+        cam = cv2.VideoCapture(0)                 # later we change it to camera id
+        frame = cam.read()[1]
+        cam.release()
+        cv2.imwrite('temp.jpg',frame)
+        img = face_recognition.load_image_file('temp.jpg')
+        os.remove('temp.jpg')
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        facedata_list = face_recognition.face_encodings(img) 
+        length=len(facedata_list)
+        for Enrollment in Enrollment_List:
+            facedata_old_str = self.fetch_face_data(Enrollment)
+            if facedata_old_str==0:
+                result[Enrollment]=-1
+                continue
+            facedata_old = pickle.loads(facedata_old_str)
+            count=0
+            for facedata in facedata_list:
+                if face_recognition.compare_faces([facedata,],facedata_old)[0]:
+                    result[Enrollment]='P'
+                    count=1
+                    break
+            if count==0:
+                result[Enrollment] = 'A'
+        return result,length
+    def fetch_face_data(self,Enrollment):
+        result = 0
+        try:
+            data = FaceData.objects.get(Enrollment=Student.objects.get(Enrollment=Enrollment))
+            result = data.Face_Data
+        except Exception as e:
+            result = 0
+            return e.__str__()
+        return result

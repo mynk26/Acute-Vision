@@ -21,8 +21,8 @@ class RegisterView(APIView):
             if serialize.is_valid():
                 try:
                     result = serialize.save()
-                except:
-                    return Response("can't save the object",status=400)
+                except Exception as E:
+                    return Response(E.__str__(),status=400)
                 data['response']='successfully register a new user.'
                 data['username']=result.username
                 data['is_student']=result.is_student
@@ -49,7 +49,7 @@ class StudentProfileView(APIView):
                 data['is_pending']=instance.is_pending
             else:
                 return Response('Some Error Occur',status=400)
-            return Response(data)
+            return Response(data,status=200)
         except Exception as E:
             return Response(E.__str__(), status=500)
     def put(self,request,*args,**kwargs):
@@ -91,7 +91,7 @@ class TeacherProfileView(APIView):
                 data['is_pending'] = instance.is_pending
             else:
                 return Response('Some Error Occur',status=400)
-            return Response(data)
+            return Response(data,status=200)
         except Exception as E:
             return Response(E.__str__(), status=500)
     def put(self,request,*args,**kwargs):

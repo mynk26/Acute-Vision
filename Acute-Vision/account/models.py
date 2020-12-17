@@ -25,12 +25,12 @@ class Student(models.Model):
     Enrollment = models.OneToOneField(user_account, on_delete=models.CASCADE, primary_key=True)
     Section = models.ForeignKey(Section,on_delete=models.SET_NULL,null = True)
 
+class FaceData(models.Model):
+    Enrollment = models.OneToOneField(Student,on_delete=models.CASCADE,primary_key=True)
+    Face_Data = models.BinaryField()
+
 class Teacher(models.Model):
     Name = models.CharField(max_length = 50)
     Email = models.CharField(max_length = 50,null=True)
     Mobile = models.CharField(max_length=13)
     Id = models.OneToOneField(user_account, on_delete=models.CASCADE, primary_key=True)
-    
-class FaceData(models.Model):
-    Enrollment = models.OneToOneField(Student,on_delete=models.CASCADE,primary_key=True)
-    Face_Data = models.BinaryField()

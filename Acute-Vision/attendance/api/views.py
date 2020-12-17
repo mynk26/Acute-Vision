@@ -1,15 +1,18 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializer import AttendanceSerializer
-from account.models import Student,user_account,Teacher
+from account.models import Student,user_account,Teacher,FaceData
 from account.api.serializer import StudentProfileSerializer
 from attendance.models import Attendance
-from section.models import Class
+from time_table.models import Subject
+from section.models import Class,Section
+from django.utils import timezone
 import cmake
 import cv2
 import face_recognition
 import shutil,os
 import pickle
+
 # Create your views here.
 
 class StudentAttendanceList(APIView):
@@ -106,8 +109,33 @@ class TakeAttendance(APIView):
             class_info = Class.objects.get(Class_Number=class_id)
             camera_id = class_info.Camera_Id
             Enrollment_List = self.Enrollment_List_Maker(section)
-            data_list = self.MarkAttendance(Enrollment_List,camera_id)
-            return Response(data_list)
+            Subject_Code_ins=Subject.objects.get(Subject_Code=subject_code)
+            Section_ins = Section.objects.get(Section_Name=section)
+            date = timezone.now().date()
+            data_list,length = self.MarkAttendance(Enrollment_List,camera_id)
+            result={}
+            result['Total Face: ']=length
+            result['A']=0
+            result['P']=0
+            for Enrollment,status in data_list.items():
+                E = Student.objects.get(Enrollment=Enrollment)
+                Status = ''
+                if status == 'A':
+                    result['A'] += 1
+                    Status = 'A'
+                elif status == 'P':
+                    result['P'] += 1
+                    Status = 'P'
+                else:
+                    result['Data Not Found'] += str(Enrollment) + ' '
+                    Status = 'A'
+                ins = Attendance.objects.create(Enrollment=E, Subject_Code=Subject_Code_ins, Section=Section_ins,
+                                                Date=date, Status=Status)
+                try:
+                    ins.save()
+                except Exception as e:
+                    result[e.__str__() + ' at:'] = str(Enrollment)
+            return Response(result)
         except Exception as E:
             return Response(E.__str__(), status=500)
 
@@ -126,14 +154,14 @@ class TakeAttendance(APIView):
         cam.release()
         cv2.imwrite('temp.jpg',frame)
         img = face_recognition.load_image_file('temp.jpg')
-        os.remove('temp.jpg')
+        #os.remove('temp.jpg')
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         facedata_list = face_recognition.face_encodings(img) 
-        result['total_Face']=len(facedata_list)
+        length=len(facedata_list)
         for Enrollment in Enrollment_List:
             facedata_old_str = self.fetch_face_data(Enrollment)
             if facedata_old_str==0:
-                result[Enrollment]='Face Data Not Found'
+                result[Enrollment]=-1
                 continue
             facedata_old = pickle.loads(facedata_old_str)
             count=0
@@ -144,7 +172,7 @@ class TakeAttendance(APIView):
                     break
             if count==0:
                 result[Enrollment] = 'A'
-        return result
+        return result,length
     
     def fetch_face_data(self,Enrollment):
         result = 0
