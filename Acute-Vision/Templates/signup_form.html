@@ -1,19 +1,35 @@
+{% extends 'base.html' %}
+
 {% block content %}
-<center>
-  <h2>Sign up</h2>
-  <form method="post">
-    {% csrf_token %}
-    {% for field in form %}
-      <p>
-        {{ field.label_tag }}<br>
-        {{ field }}<br>
-      
-        {% for error in field.errors %}
-          <p style="color: #ff0000">{{ error }}</p>
-        {% endfor %}
-      </p>
-    {% endfor %}
-    <button type="submit">Sign up</button>
-  </form>
-  </center>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="../" style='color:white;'>&larr; back</a>
+	</div>
+	</nav>
+	<div style='background-color:white; margin:auto; border-radius:20px' class='col-md-5 col-sm-10'>
+		<center style='margin-top:5em;  border-style:outset; border-radius:10px' >
+			<h2 style='border-radius:10px; color:white;' class='bg-dark p-2'>Sign up</h2><b>
+			<form method="post">
+				{% csrf_token %}
+				{% for field in form %}
+				<p>
+					<div class='form-group' >
+						{{ field.label_tag }}
+					</div>
+					<div class='form-group' >
+						{{ field }}
+					</div>
+					<!--
+					{% if field.help_text %}
+					<small style="color: grey">{{ field.help_text }}</small>
+					{% endif %}-->
+						{% for error in field.errors %}
+				<p style="color: #ff0000">{{ error }}</p>
+				{% endfor %}
+				</p>
+				{% endfor %}
+				<button type="submit" class='btn btn-primary'>Signup</button>
+			</form>
+		</center>
+	</div>
 {% endblock %}

@@ -123,7 +123,7 @@ def StudentProfileUpdate(request):
                 instance.Year=profile.Year
                 instance.Section=profile.Section
                 instance.save()
-                return HttpResponse("<script>window.location.href = '../../Home';alert('Profile Updated');</script>")
+                return HttpResponse("<script>window.location.href='../../Home/MainPage';alert('Profile Updated');</script>")
         else:
             try:
                 student = Student.objects.get(Enrollment=request.user)
@@ -135,30 +135,41 @@ def StudentProfileUpdate(request):
                 form.fields['Department'].initial = str(student.Department)
                 form.fields['Section'].initial = str(student.Section)
             except:
-                return redirect('../../signup/student/')
+                return HttpResponse("<script>window.top.location.href = '../../signup/student/'; alert('add your profile');</script>")
         return render(request,'StudentProfile.html',{'form':form})
-    return HttpResponse("<script>window.location.href = '../../Home';alert('Not a Student');</script>")
+    return HttpResponse("<script>alert('Not a Student');</script>")
 
 
 def TeacherProfileUpdate(request):
-    UserId = request.user
-    User_account = user_account.objects.get(username=UserId)
-    if User_account.is_teacher:
+    if request.user.is_teacher:
         if request.method == 'POST':
             form = TeacherProfileForm(request.POST)
             if form.is_valid():
                 instance = form.save(commit=False)
                 instance.Id=request.user
                 instance.save()
-                return HttpResponse("<script>window.location.href = '../../Home';alert('Profile Updated Teacher');</script>")
+                return HttpResponse("<script>window.location.href='../../Home/MainPage';alert('Profile Updated Teacher');</script>")
         else:
             try:
                 teacher = Teacher.objects.get(Id=request.user)
                 form = TeacherProfileForm(instance=teacher)
             except:
-                return redirect('../../signup/teacher/')
+                return HttpResponse("<script>window.top.location.href = '../../signup/teacher/'; alert('add your profile');</script>")
         return render(request,'TeacherProfile.html',{'form':form})
     return HttpResponse("<script>window.location.href = '../../Home';alert('Not a Teacher);</script>")
+
+def MainPage(request):
+    if request.user.is_student:
+        try:
+            profile = Student.objects.get(Enrollment=request.user)
+        except:
+            return HttpResponse("<script>window.top.location.href = '../../signup/student/'; alert('add your profile');</script>")
+    elif request.user.is_teacher:
+        try:
+            profile = Teacher.objects.get(Id=request.user)
+        except:
+            return HttpResponse("<script>window.top.location.href = '../../signup/teacher/'; alert('add your profile');</script>")
+    return render(request,'MainPage.html',{'name':profile.Name})
 
 def logout_request(request):
     logout(request)

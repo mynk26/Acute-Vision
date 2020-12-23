@@ -27,15 +27,59 @@ def StudentAttendance(request):
                 semester = form.cleaned_data.get('Semester')
                 section = form.cleaned_data.get('Section')
                 student_obj = Student.objects.get(Enrollment=UserId)
-                section_name=Section.objects.get(Section_Name='CSE-'+str(semester)+str(section))
+                sec= student_obj.Section.__str__()
+                sec=str(sec[sec.find('(')+1:sec.find('-')])
+                sec=sec.strip()+'-'+str(semester)+str(section)
+                section_name=Section.objects.get(Section_Name=sec)
                 result = Attendance.objects.filter(Enrollment=student_obj,Section=section_name)
+                rows=calculateRows(result)
                 result_json = serializers.serialize('json',result)
                 result_objs = json.loads(result_json)
-                return render(request,'StudentAttendance.html',{'results':reversed(result_objs)})
+                return render(request,'StudentAttendance.html',{'results':reversed(result_objs),'section':sec,'rows':rows})
         form = StudentAttendanceForm()
         return render(request,'StudentAttendance0.html',{'form':form})
     return HttpResponse("<script>window.location.href = '../../Home';alert('Not a Student');</script>")
 
+def StudentCurrentAttendance(request):
+    UserId = request.user
+    User_account = user_account.objects.get(username=UserId)
+    if User_account.is_student:
+        if request.method=='GET':
+                student_obj = Student.objects.get(Enrollment=UserId)
+                result = Attendance.objects.filter(Enrollment=student_obj,Section=student_obj.Section)
+                sec=student_obj.Section.__str__()
+                sec=str(sec[sec.find('(')+1:sec.find('-')])
+                rows=calculateRows(result)
+                result_json = serializers.serialize('json',result)
+                result_objs = json.loads(result_json)
+                return render(request,'StudentAttendance.html',{'results':reversed(result_objs),'section':sec,'rows':rows})
+    return HttpResponse("<script>window.location.href = '../../Home';alert('Not a Student');</script>")
+
+def calculateRows(result):
+    rows = {}
+    p_count=0
+    a_count=0
+    for row in result:
+        temp=row.Subject_Code.Subject_Code+'-'+row.Subject_Code.Subject_Name
+        if temp in rows:
+            if row.Status=='P':
+                rows[temp]['P']+=1
+                p_count+=1
+            else:
+                rows[temp]['A']+=1
+                a_count+=1
+            
+        else:
+            rows[temp]={'P':0,'A':0}
+            if row.Status=='P':
+                rows[temp]['P']+=1
+                p_count+=1
+            else:
+                rows[temp]['A']+=1
+                a_count+=1
+    rows['Total']={'P':p_count,'A':a_count}
+    return rows
+        
 
 def ModifyAttendanceList(request):
     UserId = request.user
@@ -74,8 +118,15 @@ def ModifyAttendanceSelected(request,pk):
                 return render(request,'ModifyAttendanceList2.html',{'results':result_objs})
         instance = Attendance.objects.get(pk=pk)
         form = ModifyAttendanceSelectedForm(instance=instance)
+        form.fields['Enrollment'].widget.attrs['readonly']=True
+        form.fields['Subject_Code'].widget.attrs['readonly']=True
+        form.fields['Section'].widget.attrs['readonly']=True
+        form.fields['Date'].widget.attrs['readonly']=True
+        form.fields['Enrollment'].initial=str(instance.Enrollment)
+        form.fields['Section'].initial=str(instance.Section)
+        form.fields['Subject_Code'].initial=str(instance.Subject_Code)
         return render(request,'ModifyAttendanceSelected.html',{'form':form})
-    return HttpResponse("<script>window.location.href = '../../Home';alert('Not Verified');</script>")
+    return HttpResponse("<script>alert('Not Verified');</script>")
 
 def raw_to_result(raw):
     result = {}
@@ -148,6 +199,8 @@ def TakeAttendance(request):
                 date = timezone.now().date()
                 Section_ins = Section.objects.get(Section_Name = Sec)
                 data,length= FaceFunctions().get(Sec,Subject_Code,Class_Number)
+                if length==-1:
+                    return HttpResponse(data)
                 result = {}
                 result['Total Faces'] = length
                 result['A']=0
@@ -169,7 +222,8 @@ def TakeAttendance(request):
                         ins.save()
                     except Exception as e:
                         result[e.__str__()+' at:']=str(Enrollment)
-                return HttpResponse(result.items())
+                s = json.dumps(result)
+                return HttpResponse('<center style="margin-top:50px;"><h2>'+s+'</h2></center>')
 
         form = TakeAttendanceForm()
         return render(request,'TakeAttendance.html',{'form':form})
@@ -185,7 +239,7 @@ class FaceFunctions():
             data_list = self.MarkAttendance(Enrollment_List,camera_id)
             return data_list
         except Exception as E:
-            return E.__str__()
+            return E.__str__(),-1
 
     def Enrollment_List_Maker(self,section):
         Student_List = Student.objects.filter(Section=section)
@@ -201,19 +255,19 @@ class FaceFunctions():
         cam.release()
         cv2.imwrite('temp.jpg',frame)
         img = face_recognition.load_image_file('temp.jpg')
-        os.remove('temp.jpg')
+        #os.remove('temp.jpg')
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         facedata_list = face_recognition.face_encodings(img) 
         length=len(facedata_list)
         for Enrollment in Enrollment_List:
-            facedata_old_str = self.fetch_face_data(Enrollment)
-            if facedata_old_str==0:
+            facedata_old_s = self.fetch_face_data(Enrollment)
+            if facedata_old_s==0:
                 result[Enrollment]=-1
                 continue
-            facedata_old = pickle.loads(facedata_old_str)
+            facedata_old = pickle.loads(facedata_old_s)
             count=0
             for facedata in facedata_list:
-                if face_recognition.compare_faces([facedata,],facedata_old)[0]:
+                if face_recognition.compare_faces([facedata_old,],facedata)[0]:
                     result[Enrollment]='P'
                     count=1
                     break

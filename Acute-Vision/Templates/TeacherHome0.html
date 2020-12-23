@@ -1,9 +1,44 @@
+{% extends 'base.html' %}
 {% block content%}
-  <Center>
-    <h3 style='color:red;'>Your verification is pending..</h3>
-    <h2>
-  <a href="../teacher/profile/">Update Profile</a><br>
+<div class='sidebarlink mb-2 bg-dark'>
+<button class="navbar-toggler navbar-dark" type="button" onclick='sidebartoggle()' val=0 id='link'>
+      <span class="navbar-toggler-icon"></span>
+</button>
+</div>
+<div class="sidebar" style='border-style:outset' id='sidebar'>
+<h2 style='color:red;'>Not Verified...</h2>
+  <a class="active" href="../Home">Home</a>
+  <a onclick='Updateiframe("../teacher/profile/")'>Update Profile</a>
   <a href="../logout/">Logout</a>
-  </h2>
-  </Center>
+</div>
+ <center id='content'>
+<iframe src='./MainPage' id='iframe' style='height:100%; width:90%;' class='offset-md-2' >
+</iframe>
+</center>
+<script>
+	function Updateiframe(url){
+		ele=document.getElementById('iframe')
+		ele.src=url
+		sidebartoggle()
+	}
+	
+	function sidebartoggle(self){
+		var sidebar=document.getElementById('sidebar');
+		var link=document.getElementById('link');
+		var c = document.getElementById('content');
+		if(link.getAttribute('val')==0){
+			sidebar.setAttribute('style','display:block;');
+			link.setAttribute('val',1);
+			c.setAttribute('style','background-color:#0006')
+		}
+		else if(link.getAttribute('val')==1){
+			if(window.matchMedia("(max-width:700px)").matches){
+				sidebar.setAttribute('style','display:none;');
+				}
+			link.setAttribute('val',0);
+			c.setAttribute('style','background-color:#0001')
+			link.blur();
+		}
+	}
+</script>
 {% endblock %}

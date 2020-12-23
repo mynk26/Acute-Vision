@@ -1,12 +1,16 @@
+{% extends 'base.html' %}
 {% block content %}
-<center>
-  <h2>Modify Attendance</h2>
-  <a href='../../../Home'>Home</a>
+<div style='background-color:white; margin:auto; border-radius:20px;'>
+<center style='border-style:outset; border-radius:10px' >
+  <h2 style='border-radius:10px; color:white; height:55px;' class='bg-dark'>Modify Attendance</h2>
+  <br>
     <table border='1px' style="text-align:center; width:40%">
-      <tr style='background-color:Gray'><th>Date</th><th>Enrollment</th><th>Subjec code</th><th>Status</th><tr>
+      <tr style='background-color:Gray'><th>Date</th><th>Enrollment</th><th>Subjec code</th><th>Status</th><th>Edit</th><tr>
     {% for result in results %}
-      <tr><td>{{result.fields.Date}}</td><td>{{result.fields.Enrollment}}</td><td>{{result.fields.Subject_Code}}</td><td>{{result.fields.Status}}</td><td><a href='../{{result.pk}}/'>Edit</a></td></tr>
+      <tr><td>{{result.fields.Date}}</td><td>{{result.fields.Enrollment}}</td><td>{{result.fields.Subject_Code}}</td><td>{{result.fields.Status}}</td><td><a href='../{{result.pk}}/' class='btn btn-primary'>Edit</a></td></tr>
     {% endfor %}
     </table>
+	</br></br></br></hr></hr>
     </center>
+	</div>
 {% endblock %}

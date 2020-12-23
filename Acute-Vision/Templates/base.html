@@ -1,18 +1,86 @@
 
 <head>
-  <link rel='text/stylesheet' href = './bootstrap-4.5.3/css/bootstrap.min.css'/>
+  {% load static %}  
+	<meta charset='UTF-8' name='viewport' content="width=device-width,initial-scale=1.0">
+    <link rel='stylesheet' href="{% static 'css/bootstrap.min.css' %}" media='screen'>  
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>  
+	<script src="{%static 'js/jquery-3.5.1.min.js'%}"></script>
+	
+	<style>
+		.sidebar {
+		  margin: 0;
+		  padding: 0;
+		  width:19%;
+		  background-color: #f1f1f1;
+		  position: fixed;
+		  height: 100%;
+		  overflow: auto;
+		}
 
+		/* Sidebar links */
+		.sidebar a {
+		  display: block;
+		  color: black;
+		  padding: 16px;
+		  text-decoration: none;
+		}
+
+		/* Active/current link */
+		.sidebar a.active {
+		  background-color: #292b2c;
+		  color: white;
+		}
+
+		/* Links on mouse-over */
+		.sidebar a:hover:not(.active) {
+		  background-color: #555;
+		  color: white;
+		}
+
+		/* Page content. The value of the margin-left property should match the value of the sidebar's width property */
+		div.content {
+		  margin-left: 200px;
+		  padding: 1px 16px;
+		  height: 1000px;
+		}
+		.sidebarlink{
+			display:None;
+		  }
+
+		/* On screens that are less than 700px wide, make the sidebar into a topbar */
+		@media screen and (max-width: 700px) {
+		  .sidebar {
+			width: 100%;
+			height: auto;
+			position: fixed;
+			display:none
+		  }
+		  .sidebar a {float: left;}
+		  div.content {margin-left: 0;}
+		  .sidebarlink{
+			display:block;
+		  }
+		}
+
+		/* On screens that are less than 400px, display the bar vertically, instead of horizontally */
+		@media screen and (max-width: 400px) {
+		
+			.sidebar{
+				display:none;
+			}
+		  .sidebar a {
+			text-align: center;
+			float: none;
+		  }
+		  
+		  .sidebarlink{
+			display:block;
+		  }
+		}
+	</style>
 </head>
-<body style='background-color:light-grey;'>
-  <a href="#" class='btn-primary'>
-    <div class="content container">
-        <div class="row">
-            <div class="col-md-8">
-            {% block content %}
-            {% endblock %}
-            </div>
-        </div>
-    </div>
-    <script src ='bootstrap-4.5.3/js/bootstrap.js></script>
-    <script src ='bootstrap-4.5.3\js\node_modules\jquery\dist\jquery.js'></script>
+<body style='background-color:#0001;'>
+
+  {% block content %}
+  {% endblock %} 
 </body>

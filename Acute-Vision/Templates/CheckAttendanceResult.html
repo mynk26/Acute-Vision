@@ -1,16 +1,23 @@
+{% extends 'base.html'%}
 {% block content %}
-<center>
-  <h2>Check Attendance</h2>
+<div style='background-color:white; margin:auto; border-radius:20px;'>
+<center style='border-style:outset; border-radius:10px' >
+  <h2 style='border-radius:10px; color:white; height:55px;' class='bg-dark'>Check Attendance</h2>
     {% csrf_token %}
     {%load mathfilters%}
-    <table border='1px' style="text-align:center; width:40%">
-    <tr style='background-color:Gray'><th>Subject Code</th><th>Enrollment</th><th>Presents</th><th>Absents</th><th>Percentage</th><tr>
+    
     {% for subject,EnrollmentList in results.items %}
-      <tr><td colspan='5'><span style='font-size:20px'>Subject_Code = {{subject}}</span></td></tr>
+	<br>
+		<table border='1px' style="text-align:center; " class='col-sm-10 col-md-5'>
+      <tr><td colspan='5'><span style='font-size:20px; margin-top:10px;'>Subject_Code = {{subject}}</span></td></tr>
+	  <tr style='background-color:Gray'><th>Subject</th><th>Enrollment</th><th>&nbsp;P&nbsp;</th><th>&nbsp;A&nbsp;</th><th>Percentage</th><tr>
       {% for enrollment,details in EnrollmentList.items %}
           <tr><td>{{subject}}</td><td>{{enrollment}}</td><td>{{details.P}}</td><td>{{details.A}}</td><td>{% with total=details.P|add:details.A %}{{details.P|div:total|mul:100}}{%endwith%}%</td></tr>
       {% endfor %}
+	  </table>
     {% endfor %}
-    </table>
-    </center>
+    
+    </br></br></br></hr></hr>
+	</center>
+	</div>
 {% endblock %}

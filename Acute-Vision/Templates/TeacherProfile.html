@@ -1,17 +1,26 @@
+{% extends 'base.html' %}
 {% block content %}
-  <h2>Teacher Profile</h2>
+<div style='background-color:white; margin:auto; border-radius:20px;'>
+<center style='border-style:outset; border-radius:10px' >
+  <h2 style='border-radius:10px; color:white; height:55px;' class='bg-dark'>Profile</h2>
   <form method="post">
     {% csrf_token %}
     {% for field in form %}
       <p>
-        {{ field.label_tag }}<br>
+	  <div class='form-group' >
+        {{ field.label_tag }}
+		</div>
+		<div class='form-group' >
         {{ field }}
+		</div>
         
         {% for error in field.errors %}
           <p style="color: #ff0000">{{ error }}</p>
         {% endfor %}
       </p>
     {% endfor %}
-    <button type="submit">Submit</button>
+    <button type="submit" class='btn btn-primary'>Submit</button>
   </form>
+   </center>
+	</div>
 {% endblock %}

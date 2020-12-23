@@ -40,6 +40,10 @@ class ModifyAttendanceForm(Form):
     Date = forms.DateField(label='Date', widget=forms.SelectDateWidget)
 
 class ModifyAttendanceSelectedForm(ModelForm):
+    Enrollment = forms.CharField(max_length=254)
+    Subject_Code=forms.CharField(max_length=30)
+    Section = forms.CharField(max_length=30)
     class Meta:
         model=Attendance
-        fields = '__all__'
+        fields = ('Date','Status')
+    field_order=['Enrollment','Subject_Code','Section','Date','Status']
